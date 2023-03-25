@@ -1,8 +1,9 @@
+using RollaBall.DataPersistence;
 using UnityEngine;
 
 namespace RollaBall
 {
-    public class CameraController : MonoBehaviour
+    public class CameraController : MonoBehaviour, IDataPersistence
     {
         [SerializeField] private GameObject _player = default;
 
@@ -16,6 +17,16 @@ namespace RollaBall
         private void LateUpdate()
         {
             transform.position = _player.transform.position + _offset;
+        }
+
+        public void LoadData(GameData data)
+        {
+            transform.position = data.CameraPosition;
+        }
+
+        public void SaveData(ref GameData data)
+        {
+            data.CameraPosition = transform.position;
         }
     }
 }
