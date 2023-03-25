@@ -1,13 +1,15 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace RollaBall.DataPersistence
 {
     public class DataPersistenceManager : MonoBehaviour
     {
+        [Header("Debugging")]
+        [SerializeField] private bool _initializeDataIfNull = false;
+
         [Header("File Storage Config")]
         [SerializeField] private string _fileName = "save.json";
         [SerializeField] private bool _useEncryption = false;
@@ -22,15 +24,37 @@ namespace RollaBall.DataPersistence
         {
             if (Instance != null)
             {
-                Debug.LogError("Found more than one Data Persistence Manager in the scene.");
+                Debug.Log("Found more than one Data Persistence Manager in the scene. Destroying the newest one.");
+                Destroy(this.gameObject);
+                return;
             }
+            Instance = this;
+            DontDestroyOnLoad(this.gameObject);
+
+            _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName, _useEncryption);
         }
 
-        private void Start()
+        private void OnEnable()
         {
-            _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName, _useEncryption);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
             _dataPersistenceObjects = FindAllDataPersistenceObjects();
             LoadGame();
+        }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            SaveGame();
         }
 
         public void NewGame()
@@ -43,11 +67,17 @@ namespace RollaBall.DataPersistence
             // Load any saved data from a file using the data handler
             _gameData = _dataHandler.Load();
 
-            // if no data can be Loaded, initialize to a new game
+            // Start a new game if the data is null and we're configured to initialize data for debugging purposes
+            if (_gameData == null && _initializeDataIfNull)
+            {
+                NewGame();
+            }
+
+            // If no data can be loaded, don't continue
             if (_gameData == null)
             {
-                Debug.Log("No data was found. Initializing data to defaults.");
-                NewGame();
+                Debug.Log("No data was found. A new game needs to be started before data can be loaded.");
+                return;
             }
 
             // Push the loaded data to all other scripts that need it
@@ -59,6 +89,13 @@ namespace RollaBall.DataPersistence
 
         public void SaveGame()
         {
+            // If we don't have any data to save, log a warning here
+            if (_gameData == null)
+            {
+                Debug.LogWarning("No data was found. A new game needs to be started before data can be saved.");
+                return;
+            }
+
             // Pass the data to other scripts so they can update it
             foreach (IDataPersistence dataPersistenceObj in _dataPersistenceObjects)
             {
@@ -79,6 +116,11 @@ namespace RollaBall.DataPersistence
             IEnumerable<IDataPersistence> dataPersistenceObjects = FindObjectsOfType<MonoBehaviour>().OfType<IDataPersistence>();
 
             return new List<IDataPersistence>(dataPersistenceObjects);
+        }
+
+        public bool HasGameData()
+        {
+            return _gameData != null;
         }
     }
 }

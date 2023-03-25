@@ -17,7 +17,6 @@ namespace RollaBall.Events
         }
 
         public event Action OnPickUpCollected;
-
         public void PickUpCollected()
         {
             if (OnPickUpCollected != null)
@@ -27,14 +26,10 @@ namespace RollaBall.Events
         }
 
         public event Action OnWinGame;
-
         public void WinGame()
         {
-            Debug.Log("Called event");
-
             if (OnWinGame != null)
             {
-                Debug.Log("Executing event");
                 OnWinGame();
             }
         }

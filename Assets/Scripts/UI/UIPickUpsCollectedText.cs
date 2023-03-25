@@ -1,13 +1,12 @@
 using RollaBall.DataPersistence;
 using RollaBall.Events;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace RollaBall
+namespace RollaBall.UI
 {
-    public class PickUpsCollectedText : MonoBehaviour, IDataPersistence
+    public class UIPickUpsCollectedText : MonoBehaviour, IDataPersistence
     {
         private TextMeshProUGUI _pickUpsCollectedText = default;
         private int _pickUpsCollected = 0;
