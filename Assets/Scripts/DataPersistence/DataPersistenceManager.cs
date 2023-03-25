@@ -9,7 +9,8 @@ namespace RollaBall.DataPersistence
     public class DataPersistenceManager : MonoBehaviour
     {
         [Header("File Storage Config")]
-        [SerializeField] private string _fileName;
+        [SerializeField] private string _fileName = "save.json";
+        [SerializeField] private bool _useEncryption = false;
 
         private GameData _gameData = default;
         private List<IDataPersistence> _dataPersistenceObjects = default;
@@ -27,7 +28,7 @@ namespace RollaBall.DataPersistence
 
         private void Start()
         {
-            _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName);
+            _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName, _useEncryption);
             _dataPersistenceObjects = FindAllDataPersistenceObjects();
             LoadGame();
         }

@@ -51,7 +51,6 @@ namespace RollaBall
                 if (pair.Value)
                 {
                     _pickUpsCollected++;
-                    Debug.Log($"After adding we have ({_pickUpsCollected}) pickups in count");
                 }
             }
 

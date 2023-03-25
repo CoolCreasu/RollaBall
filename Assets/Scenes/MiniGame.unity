@@ -1275,7 +1275,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 10
-  _winTextObject: {fileID: 486433425}
 --- !u!43 &361286400
 Mesh:
   m_ObjectHideFlags: 0
@@ -3642,6 +3641,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _fileName: save.json
+  _useEncryption: 0
 --- !u!1001 &1094820686
 PrefabInstance:
   m_ObjectHideFlags: 0
