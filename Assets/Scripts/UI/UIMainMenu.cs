@@ -32,6 +32,8 @@ namespace RollaBall.UI
         public void OnContinueGameClicked()
         {
             DisableMenuButtons();
+            // Save the game aytime before loading a new scene
+            DataPersistenceManager.Instance.SaveGame();
             // Load the next scene - which will in turn load the game because of
             // OnSceneLoaded() in the DataPersistenceManager
             SceneManager.LoadSceneAsync("MiniGame");

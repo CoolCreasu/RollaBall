@@ -38,7 +38,7 @@ namespace RollaBall
             transform.position = data.PlayerPosition;
         }
 
-        public void SaveData(ref GameData data)
+        public void SaveData(GameData data)
         {
             data.PlayerPosition = transform.position;
         }

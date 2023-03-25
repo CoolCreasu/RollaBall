@@ -14,9 +14,9 @@ namespace RollaBall.DataPersistence
         [SerializeField] private string _fileName = "save.json";
         [SerializeField] private bool _useEncryption = false;
 
-        private GameData _gameData = default;
-        private List<IDataPersistence> _dataPersistenceObjects = default;
-        private FileDataHandler _dataHandler = default;
+        private GameData _gameData;
+        private List<IDataPersistence> _dataPersistenceObjects;
+        private FileDataHandler _dataHandler;
 
         public static DataPersistenceManager Instance { get; private set; }
 
@@ -25,11 +25,11 @@ namespace RollaBall.DataPersistence
             if (Instance != null)
             {
                 Debug.Log("Found more than one Data Persistence Manager in the scene. Destroying the newest one.");
-                Destroy(this.gameObject);
+                Destroy(gameObject);
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoad(gameObject);
 
             _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName, _useEncryption);
         }
@@ -43,7 +43,7 @@ namespace RollaBall.DataPersistence
         private void OnDisable()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -99,7 +99,7 @@ namespace RollaBall.DataPersistence
             // Pass the data to other scripts so they can update it
             foreach (IDataPersistence dataPersistenceObj in _dataPersistenceObjects)
             {
-                dataPersistenceObj.SaveData(ref _gameData);
+                dataPersistenceObj.SaveData(_gameData);
             }
 
             // Save that data to a file using the data handler

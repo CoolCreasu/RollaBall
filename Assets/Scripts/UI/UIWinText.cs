@@ -7,13 +7,16 @@ namespace RollaBall.UI
     {
         private bool _enabled = false;
 
+        private void OnEnable()
+        {
+            // subscribe to events
+            // Important to subscribe in OnEnable and make the execution order put this script after the Event Manager
+            GameEventsManager.Instance.OnWinGame += OnWinGame;
+        }
+
         private void Start()
         {
             if (!_enabled) gameObject.SetActive(false);
-
-            // subscribe to events
-            // TODO - fix bug, incorrectly subscribing to event need to find the correct place for subscribing.
-            GameEventsManager.Instance.OnWinGame += OnWinGame;
         }
 
         private void OnDestroy()

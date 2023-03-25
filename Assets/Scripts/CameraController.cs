@@ -24,7 +24,7 @@ namespace RollaBall
             transform.position = data.CameraPosition;
         }
 
-        public void SaveData(ref GameData data)
+        public void SaveData(GameData data)
         {
             data.CameraPosition = transform.position;
         }

@@ -18,6 +18,8 @@ namespace RollaBall.UI
 
         private void Start()
         {
+            Debug.Log("The start method");
+
             // subscribe to events
             GameEventsManager.Instance.OnPickUpCollected += OnPickUpCollected;
         }
@@ -59,7 +61,7 @@ namespace RollaBall.UI
             }
         }
 
-        public void SaveData(ref GameData data)
+        public void SaveData(GameData data)
         {
             // No data needs to be saved for this script
         }

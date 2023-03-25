@@ -46,7 +46,7 @@ namespace RollaBall
             }
         }
 
-        public void SaveData(ref GameData data)
+        public void SaveData(GameData data)
         {
             if (data.PickUpsCollected.ContainsKey(_id))
             {
