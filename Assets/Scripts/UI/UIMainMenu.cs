@@ -5,28 +5,35 @@ using UnityEngine.UI;
 
 namespace RollaBall.UI
 {
-    public class UIMainMenu : MonoBehaviour
+    public class UIMainMenu : UIMenu
     {
+        [Header("Menu Navigation")]
+        [SerializeField] private UISaveSlotMenu _saveSlotMenu = default;
+
         [Header("Menu Buttons")]
         [SerializeField] private Button _newGameButton = default;
         [SerializeField] private Button _continueGameButton = default;
+        [SerializeField] private Button _loadGameButton = default;
 
         private void Start()
         {
             if (!DataPersistenceManager.Instance.HasGameData())
             {
                 _continueGameButton.interactable = false;
+                _loadGameButton.interactable = false;
             }
         }
 
         public void OnNewGameClicked()
         {
-            DisableMenuButtons();
-            // Create a new game - which will initialize our game data
-            DataPersistenceManager.Instance.NewGame();
-            // Load the gameplay scene which will in turn save the game because of
-            // OnSceneUnloaded() in the DataPersistenceManager
-            SceneManager.LoadSceneAsync("MiniGame");
+            _saveSlotMenu.ActivateMenu(false);
+            this.DeactivateMenu();
+        }
+
+        public void OnLoadGameClicked()
+        {
+            _saveSlotMenu.ActivateMenu(true);
+            this.DeactivateMenu();
         }
 
         public void OnContinueGameClicked()
@@ -43,6 +50,16 @@ namespace RollaBall.UI
         {
             _newGameButton.interactable = false;
             _continueGameButton.interactable = false;
+        }
+
+        public void ActivateMenu()
+        {
+            this.gameObject.SetActive(true);
+        }
+
+        public void DeactivateMenu()
+        {
+            this.gameObject.SetActive(false);
         }
     }
 }

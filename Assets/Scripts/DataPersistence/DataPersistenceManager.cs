@@ -8,7 +8,10 @@ namespace RollaBall.DataPersistence
     public class DataPersistenceManager : MonoBehaviour
     {
         [Header("Debugging")]
+        [SerializeField] private bool _disableDataPersistence = false;
         [SerializeField] private bool _initializeDataIfNull = false;
+        [SerializeField] private bool _overrideSelectedProfileId = false;
+        [SerializeField] private string _testSelectedProfileId = "test";
 
         [Header("File Storage Config")]
         [SerializeField] private string _fileName = "save.json";
@@ -17,6 +20,7 @@ namespace RollaBall.DataPersistence
         private GameData _gameData;
         private List<IDataPersistence> _dataPersistenceObjects;
         private FileDataHandler _dataHandler;
+        private string _selectedProfileId = string.Empty;
 
         public static DataPersistenceManager Instance { get; private set; }
 
@@ -31,7 +35,19 @@ namespace RollaBall.DataPersistence
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            if (_disableDataPersistence)
+            {
+                Debug.LogWarning("Data Persistence is currently disabled!");
+            }
+
             _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName, _useEncryption);
+
+            this._selectedProfileId = _dataHandler.GetMostRecentlyUpdatedProfileId();
+            if (_overrideSelectedProfileId)
+            {
+                this._selectedProfileId = _testSelectedProfileId;
+                Debug.LogWarning("Overrode selected profile id with test id: " + _testSelectedProfileId);
+            }
         }
 
         private void OnEnable()
@@ -57,6 +73,14 @@ namespace RollaBall.DataPersistence
             SaveGame();
         }
 
+        public void ChangeSelectedProfileId(string newProfileId)
+        {
+            // Update the profile to use for saving and loading
+            this._selectedProfileId = newProfileId;
+            // Load the game, which will use that profile, updating our game data accordingly
+            LoadGame();
+        }
+
         public void NewGame()
         {
             _gameData = new GameData();
@@ -64,8 +88,14 @@ namespace RollaBall.DataPersistence
 
         public void LoadGame()
         {
+            // return right away if data persistence is disabled
+            if (_disableDataPersistence)
+            {
+                return;
+            }
+
             // Load any saved data from a file using the data handler
-            _gameData = _dataHandler.Load();
+            _gameData = _dataHandler.Load(_selectedProfileId);
 
             // Start a new game if the data is null and we're configured to initialize data for debugging purposes
             if (_gameData == null && _initializeDataIfNull)
@@ -89,6 +119,12 @@ namespace RollaBall.DataPersistence
 
         public void SaveGame()
         {
+            // return right away if data persistence is disabled
+            if (_disableDataPersistence)
+            {
+                return;
+            }
+
             // If we don't have any data to save, log a warning here
             if (_gameData == null)
             {
@@ -102,8 +138,11 @@ namespace RollaBall.DataPersistence
                 dataPersistenceObj.SaveData(_gameData);
             }
 
+            // Time stamp the data so we know when it was last saved
+            _gameData.LastUpdated = System.DateTime.Now.ToBinary();
+
             // Save that data to a file using the data handler
-            _dataHandler.Save(_gameData);
+            _dataHandler.Save(_gameData, _selectedProfileId);
         }
 
         private void OnApplicationQuit()
@@ -121,6 +160,11 @@ namespace RollaBall.DataPersistence
         public bool HasGameData()
         {
             return _gameData != null;
+        }
+
+        public Dictionary<string, GameData> GetAllProfilesGameData()
+        {
+            return _dataHandler.LoadAllProfiles();
         }
     }
 }
