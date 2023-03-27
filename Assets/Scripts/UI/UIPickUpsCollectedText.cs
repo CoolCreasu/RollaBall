@@ -14,14 +14,15 @@ namespace RollaBall.UI
         private void Awake()
         {
             _pickUpsCollectedText = gameObject.GetComponent<TextMeshProUGUI>();
+
+            // subscribe to events
+            GameEventsManager.OnPickUpCollected += OnPickUpCollected;
         }
 
         private void Start()
         {
-            Debug.Log("The start method");
-
             // subscribe to events
-            GameEventsManager.Instance.OnPickUpCollected += OnPickUpCollected;
+            //GameEventsManager.OnPickUpCollected += OnPickUpCollected;
         }
 
         private void Update()
@@ -32,7 +33,7 @@ namespace RollaBall.UI
         private void OnDestroy()
         {
             // unsubscribe from events
-            GameEventsManager.Instance.OnPickUpCollected -= OnPickUpCollected;
+            GameEventsManager.OnPickUpCollected -= OnPickUpCollected;
         }
 
         private void OnPickUpCollected()
@@ -41,7 +42,7 @@ namespace RollaBall.UI
 
             if (_pickUpsCollected >= 12)
             {
-                GameEventsManager.Instance.WinGame();
+                GameEventsManager.WinGame();
             }
         }
 
@@ -57,7 +58,7 @@ namespace RollaBall.UI
 
             if (_pickUpsCollected >= 12)
             {
-                GameEventsManager.Instance.WinGame();
+                GameEventsManager.WinGame();
             }
         }
 

@@ -34,7 +34,7 @@ namespace RollaBall
         {
             _collected = true;
             gameObject.SetActive(false);
-            GameEventsManager.Instance.PickUpCollected();
+            GameEventsManager.PickUpCollected();
         }
 
         public void LoadData(GameData data)

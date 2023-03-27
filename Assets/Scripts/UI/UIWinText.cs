@@ -7,11 +7,10 @@ namespace RollaBall.UI
     {
         private bool _enabled = false;
 
-        private void OnEnable()
+        private void Awake()
         {
             // subscribe to events
-            // Important to subscribe in OnEnable and make the execution order put this script after the Event Manager
-            GameEventsManager.Instance.OnWinGame += OnWinGame;
+            GameEventsManager.OnWinGame += OnWinGame;
         }
 
         private void Start()
@@ -22,7 +21,7 @@ namespace RollaBall.UI
         private void OnDestroy()
         {
             // unsubscribe from events
-            GameEventsManager.Instance.OnWinGame -= OnWinGame;
+            GameEventsManager.OnWinGame -= OnWinGame;
         }
 
         private void OnWinGame()
