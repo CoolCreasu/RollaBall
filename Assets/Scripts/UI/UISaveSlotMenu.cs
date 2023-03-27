@@ -79,7 +79,8 @@ namespace RollaBall.UI
                 }
 
                 // set the first selected button
-                StartCoroutine(this.SetFirstSelected(firstSelected));
+                Button firstSelectedButton = firstSelected.GetComponent<Button>();
+                this.SetFirstSelected(firstSelectedButton);
             }
         }
 

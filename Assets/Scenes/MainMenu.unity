@@ -902,7 +902,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd31aa1f2f7999c478e6f4d7158bb21f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstSelected: {fileID: 698115397}
+  firstSelected: {fileID: 5784999418481124916}
   _mainMenu: {fileID: 2040775715}
   backButton: {fileID: 397185831}
 --- !u!1 &675416653
@@ -954,12 +954,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &698115397 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5784999418104431478, guid: dbb5f8216453ae84883b58956aa7876a,
-    type: 3}
-  m_PrefabInstance: {fileID: 5784999418481124915}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &698115398 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5784999418104431477, guid: dbb5f8216453ae84883b58956aa7876a,
@@ -2341,7 +2335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ed201a5c3d0c844589e24073f7b8ef5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstSelected: {fileID: 161495690}
+  firstSelected: {fileID: 161495692}
   _saveSlotMenu: {fileID: 575269512}
   _newGameButton: {fileID: 161495692}
   _continueGameButton: {fileID: 442863809}
@@ -2625,3 +2619,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dbb5f8216453ae84883b58956aa7876a, type: 3}
+--- !u!114 &5784999418481124916 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5784999418104431476, guid: dbb5f8216453ae84883b58956aa7876a,
+    type: 3}
+  m_PrefabInstance: {fileID: 5784999418481124915}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

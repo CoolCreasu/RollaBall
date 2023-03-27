@@ -152,7 +152,8 @@ namespace RollaBall.DataPersistence
 
         private List<IDataPersistence> FindAllDataPersistenceObjects()
         {
-            IEnumerable<IDataPersistence> dataPersistenceObjects = FindObjectsOfType<MonoBehaviour>().OfType<IDataPersistence>();
+            // FindObjectsOfType takes in an optional boolean to include inactive gameobjects
+            IEnumerable<IDataPersistence> dataPersistenceObjects = FindObjectsOfType<MonoBehaviour>(true).OfType<IDataPersistence>();
 
             return new List<IDataPersistence>(dataPersistenceObjects);
         }
