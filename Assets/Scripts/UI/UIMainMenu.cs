@@ -2,6 +2,7 @@ using RollaBall.DataPersistence;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEditor;
 
 namespace RollaBall.UI
 {
@@ -44,6 +45,14 @@ namespace RollaBall.UI
             // Load the next scene - which will in turn load the game because of
             // OnSceneLoaded() in the DataPersistenceManager
             SceneManager.LoadSceneAsync("MiniGame");
+        }
+
+        public void OnQuitGameClicked()
+        {
+            Application.Quit();
+#if UNITY_EDITOR
+            EditorApplication.ExitPlaymode();
+#endif
         }
 
         private void DisableMenuButtons()

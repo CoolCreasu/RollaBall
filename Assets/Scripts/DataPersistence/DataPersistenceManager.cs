@@ -60,13 +60,11 @@ namespace RollaBall.DataPersistence
         private void OnEnable()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
-            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         private void OnDisable()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -82,11 +80,6 @@ namespace RollaBall.DataPersistence
                 }
                 autoSaveCoroutine = StartCoroutine(AutoSave());
             }
-        }
-
-        private void OnSceneUnloaded(Scene scene)
-        {
-            SaveGame();
         }
 
         public void ChangeSelectedProfileId(string newProfileId)
