@@ -12,6 +12,7 @@ namespace RollaBall.DataPersistence
         private string _dataFileName = string.Empty;
         private bool _useEncryption = false;
         private readonly string _encryptionCodeWord = "word";
+        private readonly string _backupExtension = ".bak";
 
         public FileDataHandler(string dataDirPath, string dataFileName, bool useEncryption)
         {
@@ -20,7 +21,7 @@ namespace RollaBall.DataPersistence
             this._useEncryption = useEncryption;
         }
 
-        public GameData Load(string profileId)
+        public GameData Load(string profileId, bool allowRestoreFromBackup = true)
         {
             // base case - if the profileId is null, return right away
             if (profileId == null)
@@ -56,7 +57,24 @@ namespace RollaBall.DataPersistence
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Error occured when trying to load data from file: {fullPath}\n{ex}");
+                    // since we're calling Load(..) recursively, we need to account for the case where
+                    // the rollback succeeds, but data is still failing to load for some other reason,
+                    // which without this check may cause an infinite recursion loop.
+                    if (allowRestoreFromBackup)
+                    {
+                        Debug.LogWarning($"Failed to load data file. Attempting to roll back.\n{ex}");
+                        bool rollbackSuccess = AttemptRollback(fullPath);
+                        if (rollbackSuccess)
+                        {
+                            // try to load again recursively
+                            loadedData = Load(profileId, false);
+                        }
+                    }
+                    // if we hit this else block, one possibility is that the backup file is also corrupt
+                    else
+                    {
+                        Debug.LogError($"Error occured when trying to load file at path: {fullPath} and backup did not work.\n{ex}");
+                    }
                 }
             }
             return loadedData;
@@ -72,6 +90,7 @@ namespace RollaBall.DataPersistence
 
             // Use Path.Combine to account for different OS's having different path seperators
             string fullPath = Path.Combine(_dataDirPath, profileId, _dataFileName);
+            string backupFilePath = fullPath + _backupExtension;
             try
             {
                 // Create the directory the file will be written to if it doesn't already exist
@@ -92,6 +111,19 @@ namespace RollaBall.DataPersistence
                     {
                         writer.Write(dataToStore);
                     }
+                }
+
+                // verify the newly saved file can be loaded succesfully
+                GameData verifiedGameData = Load(profileId);
+                // if the data can be verified, back it up
+                if (verifiedGameData != null)
+                {
+                    File.Copy(fullPath, backupFilePath, true);
+                }
+                // otherwise something went wrong and we should throw an exception
+                else
+                {
+                    throw new Exception("Save file could not be verified and backup could not be created.");
                 }
             }
             catch (Exception ex)
@@ -208,6 +240,33 @@ namespace RollaBall.DataPersistence
                 modifiedData += (char) (data[i] ^ _encryptionCodeWord[i % _encryptionCodeWord.Length]);
             }
             return modifiedData;
+        }
+
+        private bool AttemptRollback(string fullPath)
+        {
+            bool success = false;
+            string backupFilePath = fullPath + _backupExtension;
+            try
+            {
+                // if the file exists, attempt to roll back to it by overwriting the original file
+                if (File.Exists(backupFilePath))
+                {
+                    File.Copy(backupFilePath, fullPath, true);
+                    success = true;
+                    Debug.LogWarning($"Had to roll back to backup file at: {backupFilePath}");
+                }
+                // otherwise, we don't yet have a backup file - so there's nothing to roll back to
+                else
+                {
+                    throw new Exception("Tried to roll back, but no backup file exists to roll back to.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error occured when trying to roll back to backup file at: {backupFilePath}\n{ex}");
+            }
+
+            return success;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -17,10 +18,16 @@ namespace RollaBall.DataPersistence
         [SerializeField] private string _fileName = "save.json";
         [SerializeField] private bool _useEncryption = false;
 
+        [Header("Auto Saving Configuration")]
+        [SerializeField] private bool autoSaveBoolean = false;
+        [SerializeField] private float autoSaveTimeSeconds = 60f;
+
         private GameData _gameData;
         private List<IDataPersistence> _dataPersistenceObjects;
         private FileDataHandler _dataHandler;
         private string _selectedProfileId = string.Empty;
+
+        private Coroutine autoSaveCoroutine;
 
         public static DataPersistenceManager Instance { get; private set; }
 
@@ -66,6 +73,15 @@ namespace RollaBall.DataPersistence
         {
             _dataPersistenceObjects = FindAllDataPersistenceObjects();
             LoadGame();
+
+            if (autoSaveBoolean)
+            {
+                if (autoSaveCoroutine != null)
+                {
+                    StopCoroutine(autoSaveCoroutine);
+                }
+                autoSaveCoroutine = StartCoroutine(AutoSave());
+            }
         }
 
         private void OnSceneUnloaded(Scene scene)
@@ -186,6 +202,16 @@ namespace RollaBall.DataPersistence
         public Dictionary<string, GameData> GetAllProfilesGameData()
         {
             return _dataHandler.LoadAllProfiles();
+        }
+
+        private IEnumerator AutoSave()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(autoSaveTimeSeconds);
+                SaveGame();
+                Debug.Log("Auto Saved the game");
+            }
         }
     }
 }

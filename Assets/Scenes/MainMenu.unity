@@ -1444,6 +1444,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5340753693127775164, guid: 7a7dc45591ef8da448738dcb9a2d1bf3,
         type: 3}
+      propertyPath: autoSaveTimeSeconds
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5340753693127775164, guid: 7a7dc45591ef8da448738dcb9a2d1bf3,
+        type: 3}
       propertyPath: _initializeDataIfNull
       value: 0
       objectReference: {fileID: 0}
