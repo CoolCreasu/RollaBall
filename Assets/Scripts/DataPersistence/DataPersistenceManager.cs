@@ -1,19 +1,33 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace RollaBall.DataPersistence
 {
     public class DataPersistenceManager : MonoBehaviour
     {
-        [Header("File Storage Config")]
-        [SerializeField] private string _fileName;
+        [Header("Debugging")]
+        [SerializeField] private bool _disableDataPersistence = false;
+        [SerializeField] private bool _initializeDataIfNull = false;
+        [SerializeField] private bool _overrideSelectedProfileId = false;
+        [SerializeField] private string _testSelectedProfileId = "test";
 
-        private GameData _gameData = default;
-        private List<IDataPersistence> _dataPersistenceObjects = default;
-        private FileDataHandler _dataHandler = default;
+        [Header("File Storage Config")]
+        [SerializeField] private string _fileName = "save.json";
+        [SerializeField] private bool _useEncryption = false;
+
+        [Header("Auto Saving Configuration")]
+        [SerializeField] private bool autoSaveBoolean = false;
+        [SerializeField] private float autoSaveTimeSeconds = 60f;
+
+        private GameData _gameData;
+        private List<IDataPersistence> _dataPersistenceObjects;
+        private FileDataHandler _dataHandler;
+        private string _selectedProfileId = string.Empty;
+
+        private Coroutine autoSaveCoroutine;
 
         public static DataPersistenceManager Instance { get; private set; }
 
@@ -21,15 +35,86 @@ namespace RollaBall.DataPersistence
         {
             if (Instance != null)
             {
-                Debug.LogError("Found more than one Data Persistence Manager in the scene.");
+                Debug.Log("Found more than one Data Persistence Manager in the scene. Destroying the newest one.");
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+
+            if (_disableDataPersistence)
+            {
+                Debug.LogWarning("Data Persistence is currently disabled!");
+            }
+
+            _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName, _useEncryption);
+
+            this._selectedProfileId = _dataHandler.GetMostRecentlyUpdatedProfileId();
+            if (_overrideSelectedProfileId)
+            {
+                this._selectedProfileId = _testSelectedProfileId;
+                Debug.LogWarning("Overrode selected profile id with test id: " + _testSelectedProfileId);
             }
         }
 
-        private void Start()
+        private void OnEnable()
         {
-            _dataHandler = new FileDataHandler(Application.persistentDataPath, _fileName);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
             _dataPersistenceObjects = FindAllDataPersistenceObjects();
             LoadGame();
+
+            if (autoSaveBoolean)
+            {
+                if (autoSaveCoroutine != null)
+                {
+                    StopCoroutine(autoSaveCoroutine);
+                }
+                autoSaveCoroutine = StartCoroutine(AutoSave());
+            }
+        }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            SaveGame();
+        }
+
+        public void ChangeSelectedProfileId(string newProfileId)
+        {
+            // Update the profile to use for saving and loading
+            this._selectedProfileId = newProfileId;
+            // Load the game, which will use that profile, updating our game data accordingly
+            LoadGame();
+        }
+
+        public void DeleteProfileData(string profileId)
+        {
+            // delete the data for this profile Id
+            _dataHandler.Delete(profileId);
+            // Initialize the selected profile Id
+            InitializeSelectedProfileId();
+            // reload the game so that our data matches the newely created profileId
+            LoadGame();
+        }
+
+        private void InitializeSelectedProfileId()
+        {
+            _selectedProfileId = _dataHandler.GetMostRecentlyUpdatedProfileId();
+            if (_overrideSelectedProfileId)
+            {
+                _selectedProfileId = _testSelectedProfileId;
+                Debug.LogWarning($"Overrode selected profile Id with test id: {_testSelectedProfileId}");
+            }
         }
 
         public void NewGame()
@@ -39,14 +124,26 @@ namespace RollaBall.DataPersistence
 
         public void LoadGame()
         {
-            // Load any saved data from a file using the data handler
-            _gameData = _dataHandler.Load();
+            // return right away if data persistence is disabled
+            if (_disableDataPersistence)
+            {
+                return;
+            }
 
-            // if no data can be Loaded, initialize to a new game
+            // Load any saved data from a file using the data handler
+            _gameData = _dataHandler.Load(_selectedProfileId);
+
+            // Start a new game if the data is null and we're configured to initialize data for debugging purposes
+            if (_gameData == null && _initializeDataIfNull)
+            {
+                NewGame();
+            }
+
+            // If no data can be loaded, don't continue
             if (_gameData == null)
             {
-                Debug.Log("No data was found. Initializing data to defaults.");
-                NewGame();
+                Debug.Log("No data was found. A new game needs to be started before data can be loaded.");
+                return;
             }
 
             // Push the loaded data to all other scripts that need it
@@ -58,14 +155,30 @@ namespace RollaBall.DataPersistence
 
         public void SaveGame()
         {
+            // return right away if data persistence is disabled
+            if (_disableDataPersistence)
+            {
+                return;
+            }
+
+            // If we don't have any data to save, log a warning here
+            if (_gameData == null)
+            {
+                Debug.LogWarning("No data was found. A new game needs to be started before data can be saved.");
+                return;
+            }
+
             // Pass the data to other scripts so they can update it
             foreach (IDataPersistence dataPersistenceObj in _dataPersistenceObjects)
             {
-                dataPersistenceObj.SaveData(ref _gameData);
+                dataPersistenceObj.SaveData(_gameData);
             }
 
+            // Time stamp the data so we know when it was last saved
+            _gameData.LastUpdated = System.DateTime.Now.ToBinary();
+
             // Save that data to a file using the data handler
-            _dataHandler.Save(_gameData);
+            _dataHandler.Save(_gameData, _selectedProfileId);
         }
 
         private void OnApplicationQuit()
@@ -75,9 +188,30 @@ namespace RollaBall.DataPersistence
 
         private List<IDataPersistence> FindAllDataPersistenceObjects()
         {
-            IEnumerable<IDataPersistence> dataPersistenceObjects = FindObjectsOfType<MonoBehaviour>().OfType<IDataPersistence>();
+            // FindObjectsOfType takes in an optional boolean to include inactive gameobjects
+            IEnumerable<IDataPersistence> dataPersistenceObjects = FindObjectsOfType<MonoBehaviour>(true).OfType<IDataPersistence>();
 
             return new List<IDataPersistence>(dataPersistenceObjects);
+        }
+
+        public bool HasGameData()
+        {
+            return _gameData != null;
+        }
+
+        public Dictionary<string, GameData> GetAllProfilesGameData()
+        {
+            return _dataHandler.LoadAllProfiles();
+        }
+
+        private IEnumerator AutoSave()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(autoSaveTimeSeconds);
+                SaveGame();
+                Debug.Log("Auto Saved the game");
+            }
         }
     }
 }

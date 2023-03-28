@@ -16,27 +16,16 @@ namespace RollaBall.Events
             Instance = this;
         }
 
-        public event Action OnPickUpCollected;
-
-        public void PickUpCollected()
+        public static event Action OnPickUpCollected = delegate { };
+        public static void PickUpCollected()
         {
-            if (OnPickUpCollected != null)
-            {
-                OnPickUpCollected();
-            }
+            OnPickUpCollected();
         }
 
-        public event Action OnWinGame;
-
-        public void WinGame()
+        public static event Action OnWinGame = delegate { };
+        public static void WinGame()
         {
-            Debug.Log("Called event");
-
-            if (OnWinGame != null)
-            {
-                Debug.Log("Executing event");
-                OnWinGame();
-            }
+            OnWinGame();
         }
     }
 }

@@ -1,13 +1,12 @@
 using RollaBall.DataPersistence;
 using RollaBall.Events;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace RollaBall
+namespace RollaBall.UI
 {
-    public class PickUpsCollectedText : MonoBehaviour, IDataPersistence
+    public class UIPickUpsCollectedText : MonoBehaviour, IDataPersistence
     {
         private TextMeshProUGUI _pickUpsCollectedText = default;
         private int _pickUpsCollected = 0;
@@ -15,12 +14,15 @@ namespace RollaBall
         private void Awake()
         {
             _pickUpsCollectedText = gameObject.GetComponent<TextMeshProUGUI>();
+
+            // subscribe to events
+            GameEventsManager.OnPickUpCollected += OnPickUpCollected;
         }
 
         private void Start()
         {
             // subscribe to events
-            GameEventsManager.Instance.OnPickUpCollected += OnPickUpCollected;
+            //GameEventsManager.OnPickUpCollected += OnPickUpCollected;
         }
 
         private void Update()
@@ -31,7 +33,7 @@ namespace RollaBall
         private void OnDestroy()
         {
             // unsubscribe from events
-            GameEventsManager.Instance.OnPickUpCollected -= OnPickUpCollected;
+            GameEventsManager.OnPickUpCollected -= OnPickUpCollected;
         }
 
         private void OnPickUpCollected()
@@ -40,7 +42,7 @@ namespace RollaBall
 
             if (_pickUpsCollected >= 12)
             {
-                GameEventsManager.Instance.WinGame();
+                GameEventsManager.WinGame();
             }
         }
 
@@ -51,17 +53,16 @@ namespace RollaBall
                 if (pair.Value)
                 {
                     _pickUpsCollected++;
-                    Debug.Log($"After adding we have ({_pickUpsCollected}) pickups in count");
                 }
             }
 
             if (_pickUpsCollected >= 12)
             {
-                GameEventsManager.Instance.WinGame();
+                GameEventsManager.WinGame();
             }
         }
 
-        public void SaveData(ref GameData data)
+        public void SaveData(GameData data)
         {
             // No data needs to be saved for this script
         }
