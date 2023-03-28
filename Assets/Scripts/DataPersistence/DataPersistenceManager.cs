@@ -81,6 +81,26 @@ namespace RollaBall.DataPersistence
             LoadGame();
         }
 
+        public void DeleteProfileData(string profileId)
+        {
+            // delete the data for this profile Id
+            _dataHandler.Delete(profileId);
+            // Initialize the selected profile Id
+            InitializeSelectedProfileId();
+            // reload the game so that our data matches the newely created profileId
+            LoadGame();
+        }
+
+        private void InitializeSelectedProfileId()
+        {
+            _selectedProfileId = _dataHandler.GetMostRecentlyUpdatedProfileId();
+            if (_overrideSelectedProfileId)
+            {
+                _selectedProfileId = _testSelectedProfileId;
+                Debug.LogWarning($"Overrode selected profile Id with test id: {_testSelectedProfileId}");
+            }
+        }
+
         public void NewGame()
         {
             _gameData = new GameData();

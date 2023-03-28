@@ -17,6 +17,11 @@ namespace RollaBall.UI
         [SerializeField] private TextMeshProUGUI percentageCompleteText;
         [SerializeField] private TextMeshProUGUI timeText;
 
+        [Header("Clear Data Button")]
+        [SerializeField] private Button clearButton;
+
+        public bool hasData { get; private set; } = false;
+
         private Button saveSlotButton;
 
         private void Awake()
@@ -29,13 +34,17 @@ namespace RollaBall.UI
             // there's no data for this profileId
             if (data == null)
             {
+                hasData = false;
                 noDataContent.SetActive(true);
                 hasDataContent.SetActive(false);
+                clearButton.gameObject.SetActive(false);
             }
             else // there is data for this profileId
             {
+                hasData = true;
                 noDataContent.SetActive(false);
                 hasDataContent.SetActive(true);
+                clearButton.gameObject.SetActive(true);
 
                 percentageCompleteText.text = $"{data.GetPercentageComplete()}% COMPLETE";
                 timeText.text = $"{DateTime.FromBinary(data.LastUpdated)}";
@@ -50,6 +59,7 @@ namespace RollaBall.UI
         public void SetInteractable(bool interactable)
         {
             saveSlotButton.interactable = interactable;
+            clearButton.interactable = interactable;
         }
     }
 }

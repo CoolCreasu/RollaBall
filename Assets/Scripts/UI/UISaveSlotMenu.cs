@@ -15,6 +15,9 @@ namespace RollaBall.UI
         [Header("Menu Buttons")]
         [SerializeField] private Button backButton = default;
 
+        [Header("Confirmation Popup")]
+        [SerializeField] private UIConfirmationPopUpMenu _confirmationPopUpMenu = default;
+
         private UISaveSlot[] _saveSlots = default;
 
         private bool isLoadingGame = false;
@@ -29,17 +32,59 @@ namespace RollaBall.UI
             // disable all menu buttons
             DisableMenuButtons();
 
-            // update the selected profile id to be used for data persistence
-            DataPersistenceManager.Instance.ChangeSelectedProfileId(saveSlot.GetProfileId());
-
-            if (!isLoadingGame)
+            // case - Loading game
+            if (isLoadingGame)
             {
-                // create a new game - which will initialize our data to a clean slate
-                DataPersistenceManager.Instance.NewGame();
+                DataPersistenceManager.Instance.ChangeSelectedProfileId(saveSlot.GetProfileId());
+                SaveGameAndLoadScene();
             }
+            // case - New game, but the save slot has data
+            else if (saveSlot.hasData)
+            {
+                _confirmationPopUpMenu.ActicateMenu($"Starting a new game with this slot will override the currently saved data. Are you sure?",
+                    // function to execute if we select 'yes'
+                    () => {
+                        DataPersistenceManager.Instance.ChangeSelectedProfileId(saveSlot.GetProfileId());
+                        DataPersistenceManager.Instance.NewGame();
+                        SaveGameAndLoadScene();
+                    }, 
+                    // funcion to execute if we select 'cancel'
+                    () => { 
+                        // TODO - come back to this
+                        this.ActivateMenu(isLoadingGame);
+                    });
+            }
+            // case - New game, and the save slot has no data
+            else
+            {
+                DataPersistenceManager.Instance.ChangeSelectedProfileId(saveSlot.GetProfileId());
+                DataPersistenceManager.Instance.NewGame();
+                SaveGameAndLoadScene();
+            }
+        }
 
-            // Load the scene - which will in turn save the game because of OnSceneUnloaded() in the DataPersistenceManager
+        private void SaveGameAndLoadScene()
+        {
+            // save the game anytime before loading a new scene
+            DataPersistenceManager.Instance.SaveGame();
+            // Load the scene
             SceneManager.LoadSceneAsync("MiniGame");
+        }
+
+        public void OnClearClicked(UISaveSlot saveSlot)
+        {
+            DisableMenuButtons();
+
+            _confirmationPopUpMenu.ActicateMenu("Are you sure you want to delete this save data?", 
+                // function to execute if we select 'yes'
+                () => {
+                    DataPersistenceManager.Instance.DeleteProfileData(saveSlot.GetProfileId());
+                    ActivateMenu(isLoadingGame);
+                },
+                // function to execute if we select 'cancel'
+                () => {
+                    ActivateMenu(isLoadingGame);
+                });
         }
 
         public void OnBackClicked()
@@ -58,8 +103,11 @@ namespace RollaBall.UI
             // Load all the profiles that exist
             Dictionary<string, GameData> profilesGameData = DataPersistenceManager.Instance.GetAllProfilesGameData();
 
-            GameObject firstSelected = backButton.gameObject;
+            // Ensure the back button is enabled when we activate the menu
+            backButton.interactable = true;
+
             // Loop through each save slot in the UI and set the content appropriately
+            GameObject firstSelected = backButton.gameObject;
             foreach (UISaveSlot saveSlot in _saveSlots)
             {
                 GameData profileData = null;
